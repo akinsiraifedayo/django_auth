@@ -6,6 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from .models import User
 from .serializers import UserSerializer
+
+# add this to import 
+from django.contrib.auth.hashers import make_password
+
 # Create your views here.
 
 class RegisterUserView(APIView):
@@ -13,8 +17,13 @@ class RegisterUserView(APIView):
     def post(self, request):
         if User.objects.filter(email=request.data['email']).exists():
             return Response({'error': 'Email already registered'})
-        else:
-            serializer = UserSerializer(data=request.data)
+        
+        # You dont need an else here since you already returned at the top 
+        # COpy your data and hash the password and youre good 
+        data = request.data.copy()
+        data['password'] = make_password(data['password'])
+        serializer = UserSerializer(data=data)
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
